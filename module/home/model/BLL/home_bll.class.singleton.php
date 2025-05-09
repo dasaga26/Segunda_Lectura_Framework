@@ -32,5 +32,17 @@
 		public function get_type_BLL() {
 			return $this -> dao -> select_data_type($this -> db);
 		}
+
+		public function get_tipoVenta_BLL() {
+			return $this -> dao -> select_data_tipoVenta($this -> db);
+		}
+
+		public function get_estado_BLL() {
+			return $this -> dao -> select_data_estado($this -> db);
+		}
+
+		public function get_popProduct_BLL() {
+			return $this -> dao -> select_data_popProduct($this -> db);
+		}
 	}
 ?>

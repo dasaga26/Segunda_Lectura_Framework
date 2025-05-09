@@ -31,5 +31,19 @@
             return $this -> bll -> get_type_BLL();
         }
 
+        public function get_tipoVenta() {
+            // return 'hola car type';
+            return $this -> bll -> get_tipoVenta_BLL();
+        }
+
+        public function get_estado() {
+            // return 'hola car type';
+            return $this -> bll -> get_estado_BLL();
+        }
+
+        public function get_popProducts() {
+            // return 'hola car type';
+            return $this -> bll -> get_popProduct_BLL();
+        }
     }
 ?>

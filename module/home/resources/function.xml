@@ -16,4 +16,16 @@
         <name>type</name>
         <uri>type</uri>
     </function>
+    <function>
+        <name>tipoVenta</name>
+        <uri>tipoVenta</uri>
+    </function>
+    <function>
+        <name>estado</name>
+        <uri>estado</uri>
+    </function>
+    <function>
+        <name>popProducts</name>
+        <uri>popProducts</uri>
+    </function>
 </functions>

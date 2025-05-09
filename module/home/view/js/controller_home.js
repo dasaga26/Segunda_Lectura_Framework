@@ -47,7 +47,7 @@ function carousel_Brands() {
 }
 
 function loadCategories() {
-  ajaxPromise("module/home/ctrl/ctrl_home.php?op=homeCategorias", "GET", "JSON")
+  ajaxPromise("?module=home&op=category", "GET", "JSON")
     .then(function (data) {
       var sliderContainer = $("<div></div>")
         .attr("id", "carouselCategories")
@@ -92,7 +92,7 @@ function loadCategories() {
 }
 
 function loadCatTypes() {
-  ajaxPromise("module/home/ctrl/ctrl_home.php?op=homeTipos", "GET", "JSON")
+  ajaxPromise("?module=home&op=type", "GET", "JSON")
     .then(function (data) {
       var sliderContainer = $("<div></div>")
         .attr("id", "carouselCatTypes")
@@ -226,7 +226,7 @@ function loadMostVisited() {
 }
 
 function loadTiposVenta() {
-  ajaxPromise("module/home/ctrl/ctrl_home.php?op=homeTiposVenta", "GET", "JSON")
+  ajaxPromise("?module=home&op=tipoVenta", "GET", "JSON")
     .then(function (data) {
       var sliderContainer = $("<div></div>")
         .attr("id", "carouselTiposVenta")
@@ -271,7 +271,7 @@ function loadTiposVenta() {
 }
 
 function loadEstado() {
-  ajaxPromise("module/home/ctrl/ctrl_home.php?op=homeEstado", "GET", "JSON")
+  ajaxPromise("?module=home&op=estado", "GET", "JSON")
     .then(function (data) {
       var sliderContainer = $("<div></div>")
         .attr("id", "carouselEstado")
@@ -411,10 +411,10 @@ function clicks() {
 $(document).ready(function () {
   localStorage.removeItem('filter');
   carousel_Brands();
-  // loadCategories();
-  // loadCatTypes();
-  // loadTiposVenta();
-  // loadEstado();
+  loadCategories();
+  loadCatTypes();
+  loadTiposVenta();
+  loadEstado();
   // loadMostVisited()
   // clicks();
 });
