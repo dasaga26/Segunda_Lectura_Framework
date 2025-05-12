@@ -69,24 +69,17 @@ class home_dao
         GROUP BY l.id_libro
         ORDER BY l.popularidad DESC
         LIMIT 8";
-    
+        
         $stmt = $db->ejecutar($sql);
         $res = $db->listar($stmt);
 
-        $retrArray = [];
-        if (mysqli_num_rows($res) > 0) {
-            while ($row = mysqli_fetch_assoc($res)) {
-                $retrArray[] = array(
-                    "id_libro" => $row["id_libro"],
-                    "titulo" => $row["titulo"],
-                    "descripcion" => $row["descripcion"],
-                    "precio" => $row["precio"],
-                    "longi" => $row["longi"],
-                    "lat" => $row["lat"],
-                    "imagenes" => explode(":", $row['imagenes'])
-                );
+        // Process the result to split the concatenated image URLs into an array
+        foreach ($res as &$row) {
+            if (isset($row['imagenes'])) {
+                $row['imagenes'] = explode(':', $row['imagenes']);
             }
         }
-        return $retrArray;
+
+        return $res;
     }
 }

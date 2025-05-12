@@ -42,6 +42,7 @@
 		}
 
 		public function get_popProduct_BLL() {
+			
 			return $this -> dao -> select_data_popProduct($this -> db);
 		}
 	}

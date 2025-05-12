@@ -136,7 +136,7 @@ function loadCatTypes() {
     });
 }
 function loadMostVisited() {
-  ajaxPromise("module/home/ctrl/ctrl_home.php?op=homeMostVisited", "GET", "JSON")
+  ajaxPromise("?module=home&op=popProducts", "GET", "JSON")
     .then(function (data) {
       console.log(data);
       var container = $("#mas_visitados");
@@ -221,7 +221,6 @@ function loadMostVisited() {
     })
     .catch(function () {
       alert("Error loading most visited products");
-      console.log(data);
     });
 }
 
@@ -408,6 +407,7 @@ function clicks() {
 }
 
 
+
 $(document).ready(function () {
   localStorage.removeItem('filter');
   carousel_Brands();
@@ -415,6 +415,8 @@ $(document).ready(function () {
   loadCatTypes();
   loadTiposVenta();
   loadEstado();
-  // loadMostVisited()
-  // clicks();
+  loadMostVisited()
+  clicks();
+  initializeBannerCarousel();
+
 });
