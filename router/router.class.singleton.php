@@ -2,17 +2,17 @@
     // echo $_SERVER['DOCUMENT_ROOT'] . '/1_Fw_PHP_OO_MVC_jQuery_AngularJS/Framework/5_begin_framework_ORM/';
     // exit;
 
-    //require 'autoload.php';
+    require 'autoload.php';
     
-    $path = $_SERVER['DOCUMENT_ROOT'] . '/Segunda_Lectura/Segunda_Lectura_Framework/';
-    include($path . "utils/common.inc.php");
-    //include($path . "utils/mail.inc.php");
-    include($path . "paths.php");
+    // $path = $_SERVER['DOCUMENT_ROOT'] . '/Segunda_Lectura/Segunda_Lectura_Framework/';
+    // include($path . "utils/common.inc.php");
+    // //include($path . "utils/mail.inc.php");
+    // include($path . "paths.php");
 
-    include($path . "module/home/model/BLL/home_bll.class.singleton.php");
-    include($path . "module/home/model/DAO/home_dao.class.singleton.php");
-    include($path . "model/db.class.singleton.php");
-    include($path . "model/Conf.class.singleton.php");
+    // include($path . "module/home/model/BLL/home_bll.class.singleton.php");
+    // include($path . "module/home/model/DAO/home_dao.class.singleton.php");
+    // include($path . "model/db.class.singleton.php");
+    // include($path . "model/Conf.class.singleton.php");
 
     //ob_start();
     //session_start();
@@ -65,14 +65,20 @@
                 $modules = simplexml_load_file('resources/modules.xml');
                 foreach ($modules as $row) {
                     if (in_array($this -> uriModule, (Array) $row -> uri)) {
-                        $path = MODULES_PATH . $row -> name . '/controller/controller_' . (String) $row -> name . '.class.php';
+                        $path = MODULES_PATH . $row -> name . '/controller/controller_' . (String) $row -> name . '.class.singleton.php';
                         // echo 'hola';
                         // exit;
                         if (file_exists($path)) {
                             require_once($path);
                             $controllerName = 'controller_' . (String) $row -> name;
                             $this -> nameModule = (String) $row -> name;
-                            return new $controllerName;
+                            static $controllerInstance = null;
+                            // ESTO /////////////////////////////////////
+                            if ($controllerInstance === null) {
+                                $controllerInstance = new $controllerName;
+                            }
+                            return $controllerInstance;
+                            // POSIBLEMENTE SE TENGA QUE CAMBIAR ///////
                         }
                     }
                 }

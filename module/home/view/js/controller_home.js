@@ -270,7 +270,7 @@ function loadTiposVenta() {
 }
 
 function loadEstado() {
-  ajaxPromise("?module=home&op=estado", "GET", "JSON")
+  ajaxPromise(friendlyURL("?module=home&op=estado"), "GET", "JSON")
     .then(function (data) {
       var sliderContainer = $("<div></div>")
         .attr("id", "carouselEstado")
@@ -329,7 +329,7 @@ function clicks() {
     filters.editorial = this.getAttribute('id');
     localStorage.setItem('filter', $.param(filters));
     setTimeout(function () {
-      window.location.href = 'index.php?page=shop';
+      window.location.href = '?module=shop';
     }, 1000);
   });
 
@@ -417,6 +417,5 @@ $(document).ready(function () {
   loadEstado();
   loadMostVisited()
   clicks();
-  initializeBannerCarousel();
 
 });

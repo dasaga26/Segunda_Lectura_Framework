@@ -15,6 +15,7 @@
         }
 
         public function get_list($args) {
+            
             return $this -> bll -> get_list_BLL($args);
         }
 
@@ -23,6 +24,7 @@
         }
 
         public function get_filters() {
+            
             return $this -> bll -> get_filters_BLL();
         }
         

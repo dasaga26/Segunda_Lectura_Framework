@@ -1,503 +1,866 @@
-function filters() {
+function ajaxForSearch(url, offset = 0, filters) {
+    ajaxPromise(url, "POST", "JSON", `${filters}&offset=${offset}`)
+        .then(function (data) {
+            console.log("IMANOL: "+ data);
+            $("#list-content").empty();
+            if (data === "error" || data.length === 0) {
+                $("#list-content").html(
+                    "<h3>¡No se encuentran resultados con los filtros aplicados!</h3>"
+                );
+            } else {
+                data.forEach((book) => {
+                    let bookHtml = `
+                <div class="col-lg-6 col-sm-6">
+                <div class="single_product_item more_info_list" id="${book.id_libro}">
+                    <div id="list-carousel-${book.id_libro}" class="img_container"></div>
+                    <a class="list__heart" id="${book.id_libro}" >
+                    <i id="${book.id_libro}" class="fa-solid fa-heart fa-lg heart_like"></i>
+                    </a>
+                    <div class="single_product_text">
+                    <h4>${book.titulo} 
+                        
+                    </h4>
+                    <p>${book.descripcion}</p>
+                    <h3>${book.precio}€</h3>
+                    </div>
+                </div>
+                </div>
+            `;
+                    $("#list-content").append(bookHtml);
+                    book.imagenes.forEach((img) => {
+                        let imgHtml = `
+                <div>
+                    <div class='card-box-b card-shadow news-box'>
+                    <div class='img-box-b'>
+                        <img src='${img}' alt='' class='img-b img-fluid'>
+                    </div>
+                    </div>
+                </div>
+                `;
+                        $(`#list-carousel-${book.id_libro}`).append(imgHtml);
+                    });
 
-    var type_name = [];
-    var category_name = [];
-    var color = [];
-    var extras = [];
-    var doors = [];
-    var filters = [];
-    
-    localStorage.removeItem('filters');
+                    $(`#list-carousel-${book.id_libro}`).slick({
+                        infinite: true,
+                        slidesToShow: 1,
+                        slidesToScroll: 1,
+                        dots: true,
+                        prevArrow:
+                            '<button type="button" class="slick-prev" onclick="event.stopPropagation();">&larr;</button>',
+                        nextArrow:
+                            '<button type="button" class="slick-next" onclick="event.stopPropagation();">&rarr;</button>',
+                    });
 
-    $.each($("input[id='type_name']:checked"), function(){            
-        type_name.push($(this).val());
-    });
-    if(type_name.length != 0){
-        filters.push({"type_name":type_name});
-    }
-
-    $.each($("input[id='category_name']:checked"), function(){            
-        category_name.push($(this).val());
-    });
-    if(category_name.length != 0){
-        filters.push({"category_name":category_name});
-    }
-    
-    $.each($("input[id='color']:checked"), function(){            
-        color.push($(this).val());
-    });
-    if(color.length != 0){
-        filters.push({"color":color});
-    }
-
-    $.each($("input[id='extras']:checked"), function(){            
-        extras.push($(this).val());
-    });
-    if(extras.length != 0){
-        filters.push({"extras":extras});
-    }
-
-    $.each($("input[id='doors']:checked"), function(){            
-        doors.push($(this).val());
-    });
-    
-    if(doors.length != 0){
-        filters.push({"doors":doors});
-    }
-
-    if(filters.length != 0){
-        localStorage.setItem('filters', JSON.stringify(filters));
-    }
-
-    document.filter.submit();
-    document.filter.action = friendlyURL("?module=shop&op=view");
+                    $(`#list-carousel-${book.id_libro} .slick-dots`).on(
+                        "click",
+                        function (event) {
+                            event.stopPropagation();
+                        }
+                    );
+                });
+                load_likes_user()
+            }
+            show_map(data);
+        })
+        .catch(function () {
+            $("#list-content").html(`
+            <div class="col-lg-12">
+            <img src="view/images/notfound.avif" alt="No books found" width="250px"/>
+            <h3>No hay libros disponibles.</h3>
+            </div>
+        `);
+        });
 }
 
-function load_filters() {
-    ajaxPromise(friendlyURL("?module=shop&op=filters"), 'POST', 'JSON')
-    .then(function(data) {
-        // console.log(data);
-        if(data.length == 0){
-            $(".shop_details").empty();
-            $(".filters_container").append('<div><h3>Su búsqueda no dió resultados.</h3></div>');
-        }else{
-            $(".shop_details").empty();
-            for (row in data) {
-                let content = row.replace(/_/g, " ");
-                $('<label></label>').attr('class', 'filters_title').appendTo('.filters_content')
-                .html(content.toUpperCase());
-                for (row_inner in data[row]) {
-                    content_2 = data[row][row_inner][row].replace(/_/g, " ");
-                    $('<div></div>').attr('class', 'filters_input').appendTo('.filters_content')
+function loadBooks() {
+    var filters = localStorage.getItem("filter") || false;
+    if (filters) {
+        ajaxForSearch("?module=shop&op=filter", 0, filters);
+        pagination(filters);
+    } else {
+        ajaxForSearch("?module=shop&op=list", 0);
+        //pagination({}); // Pasar un objeto vacío para el caso sin filtros
+        print_filters2();
+    }
+
+}
+
+
+
+function loadDetails(id_book) {
+    ajaxPromise(
+        "module/shop/ctrl/ctrl_shop.php?op=details_book&id=" + id_book,
+        "GET",
+        "JSON"
+    )
+        .then(function (data) {
+            console.log(data);
+
+            $("#productos-details").empty();
+            let detailsHtml = `
+        <div class="col-lg-4">
+        <div class="img_container">
+        
+        </div>
+        </div>
+        <div class="col-lg-6">
+        <div class="product_details_text">
+        <h2 style="margin: 20px 0 !important;">${data[0].titulo}</h2>
+        <a class="details__heart" id="${data[0].id_libro}">
+        <i id="${data[0].id_libro}" class="fa-solid fa-heart fa-lg details_like"></i>
+        </a>
+        <p><b>Categoría:</b>${data[0].categorias}</p>
+        <p><b>Editorial:</b>${data[0].editoriales}</p>
+        <p><b>Autores:</b>${data[0].autores}</p>
+        <p><b>Edición:</b>${data[0].edicion}</p>
+        <p><b>Páginas:</b>${data[0].paginas}</p>
+        <p>${data[0].descripcion}</p>
+        <h3>${data[0].precio}€</h3>
+        <div class="card_area d-flex justify-content-between align-items-center">
+        <div class="product_count">
+            <span class="inumber-decrement"> <i class="ti-minus"></i></span>
+            <input class="input-number" type="text" value="1" min="1" max="10">
+            <span class="number-increment"> <i class="ti-plus"></i></span>
+        </div>
+        <a href="#" class="btn_3">Añadir al carrito</a>
+        <a href="#" class="like_us"><i class="ti-heart"></i></a>
+        </div>
+        <div class="product_extras">
+        <h4>Extras del Producto</h4>
+        </div>
+        </div>               
+        </div>
+        <div class="col-lg-12 container_map_details">
+        <h3>Ubicación del Libro</h3>
+        <div id="map-single" style="height: 400px;"></div>
+        <!-- Related Books Section -->
+        <section id="related-books" class="related_books_area section_padding">
+        <div class="container">
+        <h2 class="cat">Otros clientes tambien buscaron</h2>
+
+        <div class="title_content">
+        </div>
+        <div class="related_button"></div>
+        </div>
+        </section>
+        </div>
+        `;
+
+            $("#productos-details").append(detailsHtml);
+            $("#list-container").hide();
+            $("#details-container").show();
+
+            for (row in data[1][0]) {
+                $("<div></div>")
+                    .attr({
+                        id: data[1][0].id_libro,
+                        class: "date_img_dentro img_details",
+                    })
+                    .appendTo(".img_container")
                     .html(
-                    "<input class='check' type='checkbox' id="+ row +" name="+ data[row][row_inner][row] +" value='"+ data[row][row_inner][row] +"'/>" +
-                    "<label class='etiquetas' for="+ row +" value='"+ content_2 +"'>"+ content_2 + "</label>");                  
+                        "<div class='content-img-details'>" +
+                        "<img src= '" +
+                        data[1][0][row].url +
+                        "'" +
+                        " </img>" +
+                        "</div>"
+                    );
+                console.log(data[1][0][row].url);
+            }
+
+            for (row in data[2][0]) {
+                let extraHtml = `
+            <div class="extra_item">
+                ${data[2][0][row].icono} ${data[2][0][row].extra}
+            </div>
+            `;
+                $(".product_extras").append(extraHtml);
+                console.log(data[2][0][row].icono, data[2][0][row].extra);
+            }
+            load_likes_user()
+            more_cars_related(data[0].id_tipo);
+            // Initialize Slick Carousel for the image container
+            $(".img_container").slick({
+                infinite: true,
+                slidesToShow: 1,
+                dots: true,
+                slidesToScroll: 1,
+                prevArrow: '<button type="button" class="slick-prev">&larr;</button>',
+                nextArrow: '<button type="button" class="slick-next">&rarr;</button>',
+            });
+            show_map_single(data[0]);
+        })
+        .catch(function () {
+            console.error("Error cargando los detalles del libro.");
+        });
+}
+
+function print_filters2() {
+    ajaxPromise("?module=shop&op=get_filters", "GET", "json")
+        .then(function (filters) {
+            console.log(filters);
+
+            let container = document.getElementById("filters2");
+            container.innerHTML = "";
+
+            let categoryHTML = "";
+            let selectHTML = '<div class="textos">';
+            let locationHTML = "";
+            let sliderHTML = "";
+
+            for (let nombre in filters) {
+                let filtro = filters[nombre];
+                let formato = filtro.formato;
+                let opciones = filtro.opciones;
+
+                if (formato === "checkbox") {
+                    categoryHTML += `<div class="filter_${nombre}"><p class="nombre_filtro">${nombre}</p>`;
+                    opciones.forEach((op) => {
+                        categoryHTML += `<label><input type="checkbox" value="${op.id}"> ${op.nombre}</label>`;
+                    });
+                    categoryHTML += `</div>`;
+                } else if (formato === "radio") {
+                    locationHTML += `<div class="filter_${nombre}"><p class="nombre_filtro">${nombre}</p>`;
+                    opciones.forEach((op) => {
+                        locationHTML += `<label><input type="radio" name="${nombre}" value="${op.id}"> ${op.nombre}</label>`;
+                    });
+                    locationHTML += `</div>`;
+                } else if (formato === "select") {
+                    selectHTML += `<select class="filter_${nombre}">`;
+                    opciones.forEach((op) => {
+                        selectHTML += `<option value="${op.id}">${op.nombre}</option>`;
+                    });
+                    selectHTML += `</select>`;
+                } else if (nombre === "precio") {
+                    let min = filtro.min || 0;
+                    let max = filtro.max || 100;
+
+                    // Obtener valores previos desde localStorage
+                    let savedPrice = localStorage.getItem("filter_precio")
+                        ? JSON.parse(localStorage.getItem("filter_precio"))
+                        : [min, max];
+
+                    sliderHTML += `
+                    <div class="widgets_inner">
+                    <div class="range_item">
+                        <input type="text" class="js-range-slider" id="priceRange">
+                        <div class="d-flex">
+                            <div class="price_text">
+                                <p>Price :</p>
+                            </div>
+                            <div class="price_value d-flex justify-content-center">
+                                <input type="text" class="js-input-from" id="amount-from" readonly>
+                                <span>to</span>
+                                <input type="text" class="js-input-to" id="amount-to" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                `;
+
+                    setTimeout(() => {
+                        let slider = $("#priceRange").ionRangeSlider({
+                            type: "double",
+                            min: min,
+                            max: max,
+                            from: savedPrice[0], // Usa el valor guardado
+                            to: savedPrice[1], // Usa el valor guardado
+                            skin: "round",
+                            onStart: function (data) {
+                                $("#amount-from").val(data.from);
+                                $("#amount-to").val(data.to);
+                            },
+                            onChange: function (data) {
+                                $("#amount-from").val(data.from);
+                                $("#amount-to").val(data.to);
+                            },
+                            onFinish: function (data) {
+                                // Guardar los valores al cambiar el slider
+                                localStorage.setItem(
+                                    "filter_precio",
+                                    JSON.stringify([data.from, data.to])
+                                );
+                            },
+                        });
+
+                        $("#priceRange").data("ionRangeSlider", slider);
+                    }, 0);
                 }
             }
-            $(".filters_container").append(
-                "<div class='filters_input'><input class='filter_button' name='Submit' type='button' id='filter' value='Filter' onclick='filters()'/>"+
-                "<input class='remove_button' name='Submit' type='button' id='remove-filters' value='Remove'/></div>"+
-                "</div></form>"
-            ) 
-        }
-        highlight_filters();
-        load_list_cars();
-    })
-    .catch(function() {
-        console.log('Error: Filters error');
-    });
+
+            selectHTML += `</div>`;
+
+            // Añadir el nuevo filtro fijo para ordenar
+            let orderHTML = `
+            <div class="filter_order">
+            <p class="nombre_filtro">Ordenar:</p>
+            <select class="filter_ordenar">
+                <option value="precio:desc">Precio: Mayor a Menor</option>
+                <option value="precio:asc">Precio: Menor a Mayor</option>
+                <option value="popularidad:desc">Popularidad</option>
+            </select>
+            </div>
+        `;
+
+            container.innerHTML +=
+                categoryHTML + selectHTML + orderHTML + locationHTML + sliderHTML;
+
+            container.innerHTML += `
+            </br></br>
+            <button class="filter_button" id="Button_filter">Filter</button>
+            <button class="filter_remove" id="Remove_filter">Remove</button>
+            `;
+            filter_button();
+            highlightFilters();
+
+        })
+        .catch(function () {
+            console.log("Error al obtener los filtros");
+        });
 }
 
-function orderby() {
-    
-    var orderby = [];
-
-    localStorage.setItem('orderby', orderby);
-
-    $('#orderby_select').on('change', function(){ 
-        let orderby_val = $(this).val();
-        if (orderby_val == 0) {
-            orderby = "";
-        } else if (orderby_val == 1){
-            orderby = "price ASC,";
-        } else if (orderby_val == 2){
-            orderby = "price DESC,";
-        }
-        localStorage.setItem('orderby', orderby);
+function filter_button() {
+    // Filtro categoría
+    $(".filter_categoria input[type=checkbox]").change(function () {
+        let selectedCategories = [];
+        $(".filter_categoria input[type=checkbox]:checked").each(function () {
+            selectedCategories.push(this.value);
+        });
+        localStorage.setItem(
+            "filter_categoria",
+            JSON.stringify(selectedCategories)
+        );
     });
-}
+    if (localStorage.getItem("filter_categoria")) {
+        let savedCategories = JSON.parse(localStorage.getItem("filter_categoria"));
+        savedCategories.forEach(function (category) {
+            $(`.filter_categoria input[type=checkbox][value=${category}]`).prop(
+                "checked",
+                true
+            );
+        });
+    }
 
-function visit(){
+    // Filtro tipo
+    $(".filter_tipo").change(function () {
+        localStorage.setItem("filter_tipo", this.value);
+    });
+    if (localStorage.getItem("filter_tipo")) {
+        $(".filter_tipo").val(localStorage.getItem("filter_tipo"));
+    }
 
-    $.ajax({
-        type: "POST",
-        data: {id: localStorage.getItem('id')},
-        url: friendlyURL("?module=shop&op=most_visit"),
-    })
-    .done(function( ) {
-        console.log("Visits updated");
-    })
-    .fail(function( ) {
-        console.log('Error: Most visit error');
-    }); 
-}
+    // Filtro editorial
+    $(".filter_editorial").change(function () {
+        localStorage.setItem("filter_editorial", this.value);
+    });
+    if (localStorage.getItem("filter_editorial")) {
+        $(".filter_editorial").val(localStorage.getItem("filter_editorial"));
+    }
 
-function redirect() {
-    $(document).on("click", ".list_car_desc", function(){
-        localStorage.setItem('currentPage', 'shop-details');
-        localStorage.setItem('id',  $(this).attr('id'));
-        location.reload();
+    // Filtro tipo de venta
+    $(".filter_tipo_venta").change(function () {
+        localStorage.setItem("filter_tipo_venta", this.value);
     });
-    $(document).on("click", ".popup", function(){
-        localStorage.setItem('currentPage', 'shop-details');
-        localStorage.setItem('id',  $(this).attr('id'));
-        location.reload();
+    if (localStorage.getItem("filter_tipo_venta")) {
+        $(".filter_tipo_venta").val(localStorage.getItem("filter_tipo_venta"));
+    }
+    // Filtro estado
+    $(".filter_estado").change(function () {
+        localStorage.setItem("filter_estado", this.value);
     });
-    $(document).on("click", ".related_elements", function(){
-        localStorage.setItem('currentPage', 'shop-details');
-        localStorage.setItem('id',  $(this).attr('id'));
-        location.reload();
+    if (localStorage.getItem("filter_estado")) {
+        $(".filter_estado").val(localStorage.getItem("filter_estado"));
+    }
+    // Filtro localización
+    $(".filter_localizacion input[type=radio]").change(function () {
+        localStorage.setItem("filter_localizacion", this.value);
     });
-    $(document).on("click", ".back_list" ,function(){
-        localStorage.setItem('currentPage', 'shop-list');
-        location.reload();
-    });
-    $(document).on("click", "#orderby_button" ,function(){
-        load_list_cars();
-    });
-}
+    if (localStorage.getItem("filter_localizacion")) {
+        $(
+            `.filter_localizacion input[type=radio][value=${localStorage.getItem(
+                "filter_localizacion"
+            )}]`
+        ).prop("checked", true);
+    }
 
-function highlight_filters() {
-    $('.filters_input').removeClass('active-filter');
-    if (localStorage.getItem('filters')) {
-        const filters = JSON.parse(localStorage.getItem('filters'));
-        for (row in filters) {
-            for (row_inner in filters[row]) {
-                filters[row][row_inner].forEach(e => {
-                    $('input[name='+ e +'][value='+ e +']').attr('checked', true);
-                });
-            }
-        }
+    // Filtro de precio
+    $(".js-range-slider").change(function () {
+        let from = $(this).data("from");
+        let to = $(this).data("to");
+        localStorage.setItem("filter_precio", JSON.stringify([from, to]));
+    });
+    if (localStorage.getItem("filter_precio")) {
+        let savedPrice = JSON.parse(localStorage.getItem("filter_precio"));
+        $(".js-range-slider").data("ionRangeSlider").update({
+            from: savedPrice[0],
+            to: savedPrice[1],
+        });
+    }
+
+    // Filtro de orden
+    $(".filter_ordenar").change(function () {
+        localStorage.setItem("filter_ordenar", this.value);
+    });
+    if (localStorage.getItem("filter_ordenar")) {
+        $(".filter_ordenar").val(localStorage.getItem("filter_ordenar"));
     }
 }
 
 function remove_filters() {
-    $(document).on('click', '#remove-filters', function() {
-        localStorage.removeItem('filters');
-        highlight_filters();
-        location.reload();
-        load_list_cars();
-    });
+    localStorage.removeItem("filter_categoria");
+    localStorage.removeItem("filter_editorial");
+    localStorage.removeItem("filter_tipo");
+    localStorage.removeItem("filter_estado");
+    localStorage.removeItem("filter_tipo_venta");
+    localStorage.removeItem("filter_localizacion");
+    localStorage.removeItem("filter_precio");
+    localStorage.removeItem("filter");
+    localStorage.removeItem("filter_ordenar");
+    location.reload();
 }
 
-function load_list_cars(total_prod = 0, items_page = 5) {
+function confirm_filters() {
+    var filter = {};
 
-    var filters = localStorage.getItem('filters') || false;
-    var orderby = localStorage.getItem('orderby');
-   
-    if (filters != false) {
-        var url = friendlyURL("?module=shop&op=filters_search");
-    }else {
-        var url = friendlyURL("?module=shop&op=list");
+    if (localStorage.getItem("filter_categoria")) {
+        filter["categoria"] = JSON.parse(localStorage.getItem("filter_categoria"));
+    } else {
+        filter["categoria"] = "*";
+    }
+    if (localStorage.getItem("filter_tipo")) {
+        filter["tipo"] = localStorage.getItem("filter_tipo");
+    } else {
+        filter["tipo"] = "*";
+    }
+    if (localStorage.getItem("filter_editorial")) {
+        filter["editorial"] = localStorage.getItem("filter_editorial");
+    } else {
+        filter["editorial"] = "*";
+    }
+    if (localStorage.getItem("filter_tipo_venta")) {
+        filter["tipo_venta"] = localStorage.getItem("filter_tipo_venta");
+    } else {
+        filter["tipo_venta"] = "*";
+    }
+    if (localStorage.getItem("filter_estado")) {
+        filter["estado"] = localStorage.getItem("filter_estado");
+    } else {
+        filter["estado"] = "*";
+    }
+    if (localStorage.getItem("filter_localizacion")) {
+        filter["localizacion"] = localStorage.getItem("filter_localizacion");
+    } else {
+        filter["localizacion"] = "*";
+    }
+    if (localStorage.getItem("filter_precio")) {
+        filter["precio"] = JSON.parse(localStorage.getItem("filter_precio"));
+    } else {
+        filter["precio"] = "*";
+    }
+    if (localStorage.getItem("filter_ordenar")) {
+        filter["ordenar"] = localStorage.getItem("filter_ordenar");
+    } else {
+        filter["ordenar"] = "*";
     }
 
-    $('.list_content_2').empty();
-    $(".shop_details").empty();
-    ajaxPromise(url, 'POST', 'JSON', {orderby: orderby, filters: filters, items_page: items_page, total_prod: total_prod})
-    .then(function(data) {
-        // console.log(data);
-        if(data.length == 0){
-            $('.list_car').empty();
-            $(".shop_details").empty();
-            $(".list_content").append('<div class=no_results><h3>Su búsqueda no dió resultados.</h3></div>');
-        }else{
-            $('.list_car').empty();
-            $(".shop_details").empty();
-            for (row in data) {
-                let content = data[row].color.replace(/_/g, " ");
-                $('<div></div>').attr('class',"list_car").attr('id', data[row].id).appendTo(".list_content_2").html(
-                    "<div class='list_car_desc' id='"+ data[row].id +"'>" +
-                    "<div class='img_car'><img class='list_img' src='http://localhost/Ejercicios/Framework_PHP_OO_MVC/view/images/img_cars/" + data[row].car_image +"'></div>" +
-                    "<div class='description_car'>" +
-                    "<div class='car'><h2>"+ data[row].brand_name + " " + data[row].model + "</h2><h2> - </h2><h2 class='price'>"+ data[row].price + " €" + "</h2></div>"+
-                    "<h4>"+ data[row].km + " km - " + data[row].type_name + "</h4>"+
-                    "<h4>"+ content + " - " + data[row].license_number +  " - " + data[row].car_plate + "</h4></div></div>" +
-                    "<div class='list_heart' id='"+ data[row].id +"'><i id='like' class='bx bx-heart'></i></div>"
-                )   
-            }
-        }
-        load_map(data);
-        load_like();
-    })
-    .catch(function() {
-        console.log('Error: List cars error');
-    });  
+    localStorage.setItem("filter", $.param(filter));
+    console.log("filters:", $.param(filter));
+    location.reload();
 }
 
-function load_map(data) {
+function highlightFilters() {
+    // console.log("entra");
+    var filterData = localStorage.getItem("filter");
+    var all_filters = filterData ? filterData : null;
+    // Convertir en un objeto
+    all_filters = all_filters ? Object.fromEntries(new URLSearchParams(all_filters)) : {};
 
-    mapboxgl.accessToken = 'pk.eyJ1Ijoic2FsbXUxMCIsImEiOiJja3p6cG1jcXIwY255M2JwNjZzM28wcTkzIn0.3tzNN-ErSH4vKXouoVYBDA';
-    const map = new mapboxgl.Map({
-    container: 'maps',
-    style: 'mapbox://styles/mapbox/streets-v11',
-    center: [-1.5, 40.5],
-    zoom: 4.5
-    });
-
-    for (row in data) {
-    
-        const popup = new mapboxgl.Popup({offset: 25}).setHTML(
-            "<div class='popup' id='"+ data[row].id +"'>"+
-                "<img class='popup_img' src='http://localhost/Ejercicios/Framework_PHP_OO_MVC/view/images/img_cars/" + data[row].car_image +"'>" +
-                "<div class='popup_desc_car'><h2>"+ data[row].brand_name + " " + data[row].model + " - " + data[row].price + " €" + "</h2>"+
-                    "<h3>"+ data[row].km + " km - " + data[row].type_name + "</h3>"+
-                    "<h3>"+ data[row].color + " - " + data[row].city + "</h3>"+
-                "</div>"+
-            "</div>"
-        );
-
-        const marker = new mapboxgl.Marker({color: 'red'})
-        .setLngLat([data[row].lng, data[row].lat])
-        .setPopup(popup)
-        .addTo(map);
+    if (all_filters) {
+        if (all_filters.categoria && all_filters.categoria !== "*") {
+            let categories = all_filters.categoria.split(","); // Separar las categorías por coma
+            categories.forEach(function (category) {
+                $(`.filter_categoria input[type=checkbox][value=${category}]`)
+                    .prop("checked", true)
+                    .closest("label")
+            });
+        }
+        if (all_filters.tipo && all_filters.tipo !== "*") {
+            $(".filter_tipo")
+                .val(all_filters.tipo)
+                .addClass("selected-filter");
+        }
+        if (all_filters.editorial && all_filters.editorial !== "*") {
+            $(".filter_editorial")
+                .val(all_filters.editorial)
+                .addClass("selected-filter");
+        }
+        if (all_filters.tipo_venta && all_filters.tipo_venta !== "*") {
+            $(".filter_tipo_venta")
+                .val(all_filters.tipo_venta)
+                .addClass("selected-filter");
+        }
+        if (all_filters.estado && all_filters.estado !== "*") {
+            $(".filter_estado")
+                .val(all_filters.estado)
+                .addClass("selected-filter");
+        }
+        if (all_filters.localizacion && all_filters.localizacion !== "*") {
+            $(`.filter_localizacion input[type=radio][value=${all_filters.localizacion}]`)
+                .prop("checked", true)
+                .closest("label")
+        }
     }
 }
 
-function load_details() {
-    $("#list_view").empty();
-    ajaxPromise(friendlyURL("?module=shop&op=details_carousel"), 'GET', 'JSON', {id: localStorage.getItem('id')})
-    .then(function(data) {
-        // console.log(data[1][0][1].image_name);
-        visit();
-        $(".shop_details_content").append(
-            "<div class='details_box'>" +
-                "<div class='details_content'>" +
-                    "<div class='carrusel_details'></div>"+
-                    "<div class='car_details'>" +
-                        "<div class='table_details'>" +
-                            "<table class='details_table'>" +
-                                "<tr><th class='titles' colspan='2'>"+ data[0][0].brand_name + " " + data[0][0].model + "</th></tr> " +
-                                "<tr><th class='titles' colspan='2'>"+ data[0][0].price +  " €" + "</th></tr>"+
-                                "<tr><th class='attributes'>"+ data[0][0].type_name + "</th><th class='attributes_2'>"+ data[0][0].km + " km" + "</th></tr>"+
-                                "<tr><th class='attributes'>"+ data[0][0].color + "</th><th class='attributes_2'>"+ data[0][0].car_plate + "</th></tr>" +
-                            "</table>" +
-                        "</div>"+
-                        "<div class='like_details'>" +
-                            "<div class='list_heart' id='"+ data[0][0].id +"'><i id='like' class='bx bx-heart'></i></div>" +
-                        "</div>" +
-                    "</div>" +
-                "</div>" +
-                "<div class='back_content'>" +
-                    "<div class='back_list'>" +
-                        "<div class='back_but'>" +
-                            "<i id='back' class='bx bx-x'></i>" +
-                        "</div>" +
-                    "</div>" +
-                "</div>" +
-            "</div>" 
-        )
-        for (row in data[1][0]) {
-            $('<div></div>').attr('class',"carousel_details_elements").appendTo(".carrusel_details").html( 
-                "<img class='carousel_details_img' src='http://localhost/Ejercicios/Framework_PHP_OO_MVC/" + data[1][0][row].image_name +"' alt=''>"
-            )
-        }
-        $('.carrusel_details').slick();
-        $('<div></div>').attr('class',"maps_details").attr('id',"maps_details").appendTo(".shop_details_content").html(
-        )
-        $('<div></div>').attr('class',"back_list").appendTo(".shop_details_content").html(
-            "<div class='list_button' id='list-filters' data-tr='Back'>Back</div>"
-        )
-        load_map_details(data);
-        load_more(data);
-        load_like();
-    })
-    .catch(function() {
-        console.log('Error: Details error');
-    });
-}
-
-function load_map_details(data) {
-
-    mapboxgl.accessToken = 'pk.eyJ1Ijoic2FsbXUxMCIsImEiOiJja3p6cG1jcXIwY255M2JwNjZzM28wcTkzIn0.3tzNN-ErSH4vKXouoVYBDA';
-    const map = new mapboxgl.Map({
-        container: 'maps_details',
-        style: 'mapbox://styles/mapbox/streets-v11',
-        center: [data[0][0].lng, data[0][0].lat],
-        zoom: 8
-    });
-
-    const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
-        "<div class='popup_details' id='"+ data[0][0].id +"'>"+
-        "<img class='popup_img' src='http://localhost/Ejercicios/Framework_PHP_OO_MVC/view/images/img_cars/" + data[0][0].car_image +"'>" +
-        "<div class='popup_desc_car'><h2>"+ data[0][0].brand_name + " " + data[0][0].model + " - " + data[0][0].price +  " €" + "</h2>"+
-            "<h3>"+ data[0][0].km + " km - " + data[0][0].type_name + "</h3>"+
-            "<h3>"+ data[0][0].color + " - " + data[0][0].city + "</h3>"+
-        "</div>"+
-        "</div>"
+function show_filters() {
+    $("#filters2").toggleClass("filters2_hidden filters2_show");
+    localStorage.setItem(
+        "filters_visibility",
+        $("#filters2").hasClass("filters2_show")
     );
-
-    const marker1 = new mapboxgl.Marker({ color: 'red'})
-    .setLngLat([data[0][0].lng, data[0][0].lat])
-    .setPopup(popup)
-    .addTo(map);
 }
 
-function cars(car_data, loadeds = 0) {
-
-    let loaded = loadeds;
-    let items = 3;
-
-    
-    ajaxPromise(friendlyURL("?module=shop&op=cars"), 'POST', 'JSON', {category: car_data[0][0].category, type: car_data[0][0].type, id: car_data[0][0].id, loaded: loaded, items: items})
-    .then(function(data) {
-        for (row in data) {
-            // content = data[row].category_name.replace(/_/g, " ");
-            $('<div></div>').attr('class', "more_related_elements").attr('id', data[row].id).appendTo("#cat").html(
-            "<div class='col-4 col-12-medium'>"+
-                "<section class='box feature'>"+
-                    "<div class='related_elements' id='"+ data[row].id +"'>" +
-                        "<img class='list_img' src='http://localhost/Ejercicios/Framework_PHP_OO_MVC/view/images/img_cars/" + data[row].car_image +"'>" +
-                        "<div class='inner'>"+        
-                            "<h2 class='category_title'>"+ data[row].brand_name + " " + data[row].model +"</h2>"+
-                        "</div>"+
-                    "</div>"+
-                    "<div class='like_related'>" +
-                        "<div class='list_heart' id='"+ data[row].id +"'><i id='like' class='bx bx-heart'></i></div>" +
-                    "</div>" +
-                "</section>"+
-            "</div>"
-            )
-        }
-    }).catch(function() {
-        console.log('Error: Number of cars error');
-    }); 
+function restore_filters_visibility() {
+    const isFiltersVisible =
+        localStorage.getItem("filters_visibility") === "true";
+    if (isFiltersVisible) {
+        $("#filters2").addClass("filters2_show").removeClass("filters2_hidden");
+    } else {
+        $("#filters2").addClass("filters2_hidden").removeClass("filters2_show");
+    }
 }
 
-function load_more(data) {
-    
-    car_data = data;
-    total_items = 9;
-    cars(car_data);
-
-    $(document).on("click",'#load_more_button', function (){
-        var items = $('.more_related_elements').length + 3;
-        if (total_items <= items) {
-          $('.load_more_button').remove();
-        }
-        cars(car_data, $('.more_related_elements').length);
+function clicks() {
+    $(document).on("click", ".more_info_list", function () {
+        var id_book = this.getAttribute("id");
+        loadDetails(id_book);
     });
-}
-
-function load_pagination(){
-
-    var filters = localStorage.getItem('filters') || false;
-
-    if (localStorage.getItem('filters')) {
-        var url = friendlyURL("?module=shop&op=count_filters");
-    }else {
-        var url = friendlyURL("?page=shop&op=count");
-    }
-
-    ajaxPromise(url, 'POST', 'JSON', {filters: filters})
-    .then(function(data) {
-
-        var total_pages = 0;
-        var total_prod = data[0].num_cars;
-
-        if(total_prod >= 5){
-            total_pages = Math.ceil(total_prod / 5);
-        }else{
-            total_pages = 1;
-        }
-
-        $('#pagination').bootpag({
-            total: total_pages,
-            page: 1,
-            maxVisible: total_pages
-        }).on('page', function(event, num){
-            total_prod = 5 * (num - 1);
-            load_list_cars(total_prod, 5);
-            $('html, body').animate({scrollTop: $(".list_content_2")});
-        });
-    }).catch(function() {
-        console.log('Error: Pagination error');
-    }); 
-}
-
-function load_like(){
-    if(localStorage.getItem('token') == null){
-        var local = localStorage.getItem('likes');
-        if(local != null){
-            var like = JSON.parse(local);
-        }else{
-            var like = [];
-        }
-        like.forEach(load);
-    
-        function load(item, index){
-            if($("div.list_heart#" + item).children("i").hasClass("bx-heart")){
-                $("div.list_heart#" + item).children("i").removeClass("bx-heart").addClass("bxs-heart");
-            }
-        }
-    }else{
-        ajaxPromise(friendlyURL("?module=shop&op=load_likes"), 'POST', 'JSON', {token: localStorage.getItem('token')})
-        .then(function(data) { 
-            // console.log(data);
-            localStorage.removeItem('likes');
-            for (row in data) {
-                if($("#" + data[row].id_car + ".list_heart").children("i").hasClass("bx-heart")){
-                    $("#" + data[row].id_car + ".list_heart").children("i").removeClass("bx-heart").addClass("bxs-heart");
-                }
-            }
-        }).catch(function() {
-            console.log('Error: Load like error');
-        });   
-    }
-}
-
-function click_like(){
-    $(document).on('click', '.list_heart', function() {
-        if(localStorage.getItem('token') == null) {
-            localStorage.setItem('product', this.getAttribute('id'));
-            window.location.href = friendlyURL("?module=login&op=view");
-            if($(this).children("i").hasClass("bx-heart")){
-                $(this).children("i").removeClass("bx-heart").addClass("bxs-heart");
-                like_storage(this.getAttribute('id'), like);
-            }else{
-                $(this).children("i").removeClass("bxs-heart").addClass("bx-heart");
-                like_storage(this.getAttribute('id'), like);
-            }
-        }else{
-            ajaxPromise(friendlyURL("?module=shop&op=control_likes"), 'POST', 'JSON', {id: this.getAttribute('id'), token: localStorage.getItem('token')})
-            .then(function(data) { 
-                console.log(data);
-            }).catch(function() {
-                console.log('Error: Click like error');
-            });  
-
-            if($(this).children("i").hasClass("bx-heart")){
-                $(this).children("i").removeClass("bx-heart").addClass("bxs-heart");
-            }else{
-                $(this).children("i").removeClass("bxs-heart").addClass("bx-heart");
-            }
-        }
+    $(document).on("click", ".filter_button", function () {
+        confirm_filters();
     });
-}
 
-function like_storage(id){
-
-    var local = localStorage.getItem('likes');
-    
-    if(local != null){
-        var like = JSON.parse(local);
-    }else{
-        var like = [];
-    }
-
-    if(like.indexOf(id) === -1){
-        like.push(id);
-    }else if(like.indexOf(id) !== -1){
-        like.splice(like.indexOf(id),1);
-    } 
-   
-    localStorage.setItem('likes', JSON.stringify(like));
-}
-
-function load_content_shop(){
-    if (localStorage.getItem('currentPage') == 'shop-details') {
-        load_details();
-        redirect();
-    }else {
-        orderby();
-        load_pagination();
-        load_filters();
-        redirect();
+    $(document).on("click", ".filter_remove", function () {
         remove_filters();
+    });
+
+    $(document).on("click", ".list__heart", function (event) {
+        event.stopPropagation(); // Evita que el evento se propague al contenedor padre
+        var id_libro = this.getAttribute('id');
+        click_like(id_libro, "list_all");
+    });
+
+    $(document).on("click", ".details__heart", function () {
+        var id_libro = this.getAttribute('id');
+        click_like(id_libro, "details");
+    });
+}
+
+let map; // Variable global para almacenar el mapa
+let markersLayer; // Capa para los marcadores
+
+function show_map(data) {
+
+    if (!map) {
+        // Crear el mapa solo si no existe
+        map = L.map("map").setView([40.4168, -3.7038], 6); // Centrado en España
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution:
+                '&copy; <a href="https://www.openstreetmap.org/copyright">DANI SANZ GARCIA</a> contributors',
+        }).addTo(map);
+    }
+
+    // Si ya hay una capa de marcadores, la eliminamos antes de añadir los nuevos
+    if (markersLayer) {
+        markersLayer.clearLayers();
+    } else {
+        markersLayer = L.layerGroup().addTo(map);
+    }
+
+    // Agregar los nuevos marcadores
+    data.forEach((book) => {
+        const marker = L.marker([book.lat, book.longi]).addTo(markersLayer);
+
+        let imagesHtml = "";
+        book.imagenes.forEach((img) => {
+            imagesHtml += `
+            <div>
+            <div class='card-box-b card-shadow news-box'>
+                <div class='img-box-b'>
+                <img src='${img}' alt='' class='img-b img-fluid'>
+                </div>
+            </div>
+            </div>
+        `;
+        });
+
+        const popupContent = `
+        <div class="book-info-popup more_info_list" id="${book.id_libro}">
+            <h3 class="book-title">${book.titulo}</h3>
+            <p class="book-price">Precio: <b>${book.precio}€</b></p>
+            <div class="img-container">
+            <div id="popup-carousel-${book.id_libro}" class="popup-carousel">
+                ${imagesHtml}
+            </div>
+            </div>
+        </div>
+        `;
+
+        marker.bindPopup(popupContent).on("popupopen", function () {
+            setTimeout(() => {
+                $(`#popup-carousel-${book.id_libro}`).slick({
+                    infinite: true,
+                    slidesToShow: 1,
+                    slidesToScroll: 1,
+                    dots: true,
+                    arrows: false,
+                });
+            }, 0);
+        });
+    });
+}
+
+function show_map_single(book) {
+    console.log(book);
+    var map = L.map("map-single").setView([book.lat, book.longi], 13);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">DANI SANZ GARCIA</a> contributors',
+    }).addTo(map);
+
+    L.marker([book.lat, book.longi]).addTo(map);
+}
+
+function pagination(filter) {
+    var filtros = localStorage.getItem("filter");
+    var url;
+
+    // Determinar la URL correcta basada en el tipo de filtro
+    if (filtros) {
+        url = "module/shop/ctrl/ctrl_shop.php?op=count_filters";
+        filter = filtros;
+    } else {
+        url = "module/shop/ctrl/ctrl_shop.php?op=count";
+    }
+
+    ajaxPromise(url, "POST", "json", filter)
+        .then(function (data) {
+
+            var total_prod = data;
+            var total_pages = total_prod >= 4 ? Math.ceil(total_prod / 4) : 1;
+
+            var paginationContainer = $("#pagination");
+            paginationContainer.empty();
+            var currentPage = 1;
+
+            function renderPagination() {
+                paginationContainer.empty();
+
+                if (currentPage > 1) {
+                    paginationContainer.append(
+                        `<button class="page-btn prev-btn" data-page="${currentPage - 1}">&larr; Anterior</button>`
+                    );
+                }
+
+                for (let i = 1; i <= total_pages; i++) {
+                    paginationContainer.append(
+                        `<button class="page-btn ${i === currentPage ? "active" : ""}" data-page="${i}">${i}</button>`
+                    );
+                }
+
+                if (currentPage < total_pages) {
+                    paginationContainer.append(
+                        `<button class="page-btn next-btn" data-page="${currentPage + 1}">Siguiente &rarr;</button>`
+                    );
+                }
+
+                $(".page-btn").off("click").on("click", function () {
+                    currentPage = $(this).data("page");
+                    var offset = 4 * (currentPage - 1);
+
+                    // Determinar la URL correcta para la búsqueda
+                    let searchUrl;
+                    if (filtros) {
+                        searchUrl = "module/shop/ctrl/ctrl_shop.php?op=filter";
+                        filter = filtros;
+                    } else {
+                        searchUrl = "module/shop/ctrl/ctrl_shop.php?op=all_books";
+                        filter = null;
+                    }
+
+                    ajaxForSearch(searchUrl, offset, filter);
+                    $("html, body").animate({ scrollTop: $(".wrap") });
+                    renderPagination();
+                });
+            }
+
+            renderPagination();
+        });
+}
+
+function books_related(loadeds = 0, type_book, total_items = 4) {
+    let items = 3;
+    ajaxPromise(`module/shop/ctrl/ctrl_shop.php?op=books_related&type=${type_book}&loadeds=${loadeds}&total_items=${items}`, "GET", "JSON")
+        .then(function (data) {
+            data.forEach((book) => {
+                console.log("Book:", book);
+            });
+            if (loadeds === 0) {
+                $('<div></div>')
+                    .attr({ id: "title_content", class: "title_content" })
+                    .appendTo(".results")
+                    .html('<h2 class="cat">Books Related</h2>');
+
+                data.forEach((book) => {
+                    if (book.id_libro !== undefined) {
+                        $('<div></div>')
+                            .attr({ id: book.id_libro, class: "more_info_list" })
+                            .appendTo(".title_content")
+                            .html(`
+                    <li class='portfolio-item'>
+                    <div class='item-main'>
+                        <div class='portfolio-image'>
+                        <img src="${book.imagenes[0]}" alt='Book Image' />
+                        </div>
+                        <h5>${book.titulo}</h5>
+                        <p>${book.descripcion}</p>
+                        <h6>${book.precio}€</h6>
+                    </div>
+                    </li>
+                `);
+                    }
+                });
+
+                $('<div></div>')
+                    .attr({ id: "more_book__button", class: "more_book__button" })
+                    .appendTo(".related_button")
+                    .html('<button class="load_more_button" id="load_more_button">LOAD MORE</button>');
+            } else {
+                // Append new books without clearing existing ones
+                data.forEach((book) => {
+                    if (book.id_libro !== undefined) {
+                        $('<div></div>')
+                            .attr({ id: book.id_libro, class: "more_info_list" })
+                            .appendTo(".title_content")
+                            .html(`
+                    <li class='portfolio-item'>
+                    <div class='item-main'>
+                        <div class='portfolio-image'>
+                        <img src="${book.imagenes[0]}" alt='Book Image' />
+                        </div>
+                        <h5>${book.titulo}</h5>
+                        <p>${book.descripcion}</p>
+                        <h6>${book.precio}€</h6>
+                    </div>
+                    </li>
+                `);
+                    }
+                });
+            }
+            let remainingBooks = total_items - loadeds - items;
+            if (remainingBooks <= 0) {
+                $(".more_book__button").remove();
+                $('<div></div>')
+                    .attr({ id: "more_book__button", class: "more_book__button" })
+                    .appendTo(".title_content")
+                    .html("</br><button class='btn-notexist' id='btn-notexist'>No More Books</button>");
+            } else {
+                $(".more_book__button").remove();
+                $('<div></div>')
+                    .attr({ id: "more_book__button", class: "more_book__button" })
+                    .appendTo(".title_content")
+                    .html('<button class="load_more_button" id="load_more_button">LOAD MORE</button>');
+            }
+        })
+        .catch(function () {
+            console.log("Error loading related books");
+        });
+}
+
+function more_cars_related(type_book) {
+    var items = 0;
+    ajaxPromise('module/shop/ctrl/ctrl_shop.php?op=count_books_related&type_book=' + type_book, 'POST', 'JSON',)
+        .then(function (data) {
+            var total_items = data;
+            books_related(0, type_book, total_items);
+            $(document).on("click", '.load_more_button', function () {
+                items = items + 3;
+                $('.more_car__button').empty();
+                books_related(items, type_book, total_items);
+            });
+        }).catch(function () {
+            console.log('error total_items');
+        });
+}
+
+function click_like(id_libro, lugar) {
+    var token = localStorage.getItem('token');
+    if (token) {
+        ajaxPromise("module/shop/ctrl/ctrl_shop.php?op=control_likes", 'POST', 'JSON', `id_libro=${id_libro}&token=${token}`)
+            .then(function (data) {
+                console.log("ESERE: " + data);
+                if (lugar === "details") {
+                    $(".details__heart#" + id_libro + " .fa-heart").toggleClass('like_red');
+                } else if (lugar === "list_all") {
+                    $(".list__heart#" + id_libro + " .fa-heart").toggleClass('like_red');
+                }
+            }).catch(function () {
+                alert("error like");
+                //window.location.href = "index.php?module=ctrl_exceptions&op=503&type=503&lugar=Function click_like SHOP";
+            });
+
+    } else {
+        const redirect = [];
+        redirect.push(id_libro, lugar);
+
+        localStorage.setItem('redirect_like', redirect);
+        localStorage.setItem('id_libro', id_libro);
+
+        Swal.fire({
+            icon: 'warning',
+            title: 'Debes iniciar sesión',
+            text: 'Por favor, inicia sesión para continuar.',
+            confirmButtonText: 'Aceptar'
+        });
+        setTimeout("location.href = 'index.php?module=ctrl_login&op=login-register_view';", 1000);
     }
 }
 
-$(document).ready(function() {
-    // load_content_shop();
-    alert("Hola");
-    // click_like();
+function load_likes_user() {
+    var token = localStorage.getItem('token');
+    if (token) {
+        ajaxPromise("module/shop/ctrl/ctrl_shop.php?op=load_likes_user", 'POST', 'JSON', `token=${token}`)
+            .then(function (data) {
+                for (row in data) {
+                    $("#" + data[row].id_libro + ".fa-heart").toggleClass('like_red');
+                }
+            }).catch(function () {
+                window.location.href = "index.php?module=ctrl_exceptions&op=503&type=503&lugar=Function load_like_user SHOP";
+            });
+    }
+}
+
+function redirect_login_like() {
+    //var token = localStorage.getItem('token');
+    //var id_car = localStorage.getItem('id_car');
+    //fer el like a l'user
+    //loadDetails(id_car);
+    var redirect = localStorage.getItem('redirect_like').split(",");
+    if (redirect[1] == "details") {
+        loadDetails(redirect[0]);
+        localStorage.removeItem('redirect_like');
+        localStorage.removeItem('page');
+    } else if (redirect[1] == "list_all") {
+        localStorage.removeItem('redirect_like');
+        loadCars();
+    }
+}
+
+$(document).ready(function () {
+    loadBooks();
+    // print_filters2();
+    // restore_filters_visibility();
+    // filter_button();
+    // clicks();
 });
