@@ -1,13 +1,14 @@
 function ajaxForSearch(url, offset = 0, filters) {
     ajaxPromise(url, "POST", "JSON", `${filters}&offset=${offset}`)
         .then(function (data) {
-            console.log("IMANOL: "+ data);
+            console.log("IMANOL: ", data);
             $("#list-content").empty();
             if (data === "error" || data.length === 0) {
                 $("#list-content").html(
                     "<h3>¡No se encuentran resultados con los filtros aplicados!</h3>"
                 );
             } else {
+
                 data.forEach((book) => {
                     let bookHtml = `
                 <div class="col-lg-6 col-sm-6">
@@ -26,17 +27,18 @@ function ajaxForSearch(url, offset = 0, filters) {
                 </div>
                 </div>
             `;
+
                     $("#list-content").append(bookHtml);
                     book.imagenes.forEach((img) => {
                         let imgHtml = `
-                <div>
-                    <div class='card-box-b card-shadow news-box'>
-                    <div class='img-box-b'>
-                        <img src='${img}' alt='' class='img-b img-fluid'>
-                    </div>
-                    </div>
-                </div>
-                `;
+                        <div>
+                            <div class='card-box-b card-shadow news-box'>
+                            <div class='img-box-b'>
+                                <img src='${img}' alt='' class='img-b img-fluid'>
+                            </div>
+                            </div>
+                        </div>
+                        `;
                         $(`#list-carousel-${book.id_libro}`).append(imgHtml);
                     });
 
@@ -58,9 +60,14 @@ function ajaxForSearch(url, offset = 0, filters) {
                         }
                     );
                 });
+
                 load_likes_user()
+
             }
-            show_map(data);
+            alert("img");
+
+            // show_map(data);
+
         })
         .catch(function () {
             $("#list-content").html(`
@@ -89,7 +96,7 @@ function loadBooks() {
 
 function loadDetails(id_book) {
     ajaxPromise(
-        "module/shop/ctrl/ctrl_shop.php?op=details_book&id=" + id_book,
+        "?module=shop&op=details_carousel&id=" + id_book,
         "GET",
         "JSON"
     )
@@ -638,7 +645,7 @@ function pagination(filter) {
 
     // Determinar la URL correcta basada en el tipo de filtro
     if (filtros) {
-        url = "module/shop/ctrl/ctrl_shop.php?op=count_filters";
+        url = "?module=shop&op=count_filters";
         filter = filtros;
     } else {
         url = "module/shop/ctrl/ctrl_shop.php?op=count";
@@ -859,8 +866,8 @@ function redirect_login_like() {
 
 $(document).ready(function () {
     loadBooks();
-    // print_filters2();
-    // restore_filters_visibility();
-    // filter_button();
-    // clicks();
+    print_filters2();
+    restore_filters_visibility();
+    filter_button();
+    clicks();
 });

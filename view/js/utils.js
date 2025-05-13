@@ -1,4 +1,6 @@
 function ajaxPromise(url, method, type, data = undefined) {
+  console.log("url", url);
+  console.log("data", data);
   return new Promise((resolve, reject) => {
     $.ajax({
       url: url,

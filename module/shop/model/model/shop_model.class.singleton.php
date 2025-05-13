@@ -23,13 +23,17 @@
             return $this -> bll -> get_details_carousel_BLL($args);
         }
 
+        public function get_details($args) {
+            return $this -> bll -> get_details_BLL($args);
+        }
+
         public function get_filters() {
             
             return $this -> bll -> get_filters_BLL();
         }
         
-        public function get_filters_search($args) {
-            return $this -> bll -> get_filters_search_BLL($args);
+        public function get_filtrados($args) {
+            return $this -> bll -> get_filtrados_BLL($args);
         }
 
         public function get_most_visit($args) {

@@ -15,7 +15,7 @@ class shop_dao
 
     public function select_all_books($db, $offset)
     {
-        
+
         $limit = 4;
         $sql = "SELECT l.id_libro, l.titulo, l.descripcion, l.precio, l.longi, l.lat,  
         GROUP_CONCAT(i.url ORDER BY i.url SEPARATOR ':') AS imagenes
@@ -26,21 +26,15 @@ class shop_dao
         LIMIT $limit OFFSET $offset";
 
         $stmt = $db->ejecutar($sql);
-            
-        $retrArray = [];
-        if (mysqli_num_rows($stmt) > 0) {
-            while ($row = mysqli_fetch_assoc($stmt)) {
-                $retrArray[] = array(
-                    "id_libro" => $row["id_libro"],
-                    "titulo" => $row["titulo"],
-                    "descripcion" => $row["descripcion"],
-                    "precio" => $row["precio"],
-                    "longi" => $row["longi"],
-                    "lat" => $row["lat"],
-                    "imagenes" => explode(":", $row['imagenes'])
-                );
+
+        $retrArray = $db->listar($stmt);
+
+        if (!empty($retrArray)) {
+            foreach ($retrArray as &$row) {
+                $row["imagenes"] = explode(":", $row["imagenes"]);
             }
         }
+
 
         return $retrArray;
     }
@@ -48,8 +42,22 @@ class shop_dao
     function select_details($db, $id)
     {
 
-        $sql = "SELECT c.*, b.*, t.*, ct.* FROM cars c INNER JOIN brand b INNER JOIN type t INNER JOIN category ct ON c.brand = b.cod_brand "
-            . "AND c.type = t.cod_type AND c.category = ct.cod_category WHERE c.id = '$id'";
+        $sql = "SELECT l.longi, l.lat, t.id_tipo,
+			l.*, 
+			GROUP_CONCAT(DISTINCT a.autor SEPARATOR ', ') AS autores, 
+			GROUP_CONCAT(DISTINCT e.editorial SEPARATOR ', ') AS editoriales, 
+			GROUP_CONCAT(DISTINCT c.categoria SEPARATOR ', ') AS categorias
+		FROM libros l
+		LEFT JOIN libro_autor la ON l.id_libro = la.id_libro
+		LEFT JOIN autores a ON la.id_autor = a.id_autor
+		LEFT JOIN libro_editorial le ON l.id_libro = le.id_libro
+		LEFT JOIN editorial e ON le.id_editorial = e.id_editorial
+		LEFT JOIN libro_categoria lc ON l.id_libro = lc.id_libro
+		LEFT JOIN categorias c ON lc.id_categoria = c.id_categoria
+		LEFT JOIN libro_tipo lt ON lt.id_libro =l.id_libro
+		LEFT JOIN tipos t ON lt.id_tipo = t.id_tipo
+		WHERE l.id_libro = '$id'
+		GROUP BY l.id_libro";
 
         $stmt = $db->ejecutar($sql);
         return $db->listar($stmt);
@@ -178,16 +186,87 @@ class shop_dao
         return $select;
     }
 
-    public function filters($db, $orderby, $total_prod, $items_page, $query)
+    public function filters($db, $filter, $offset)
     {
+        $limit = 4;
 
-        $sql_filter = self::sql_filter($query);
+        $sql = "SELECT l.id_libro, l.titulo, l.descripcion, l.precio, l.longi, l.lat,
+                GROUP_CONCAT(DISTINCT i.url ORDER BY i.url SEPARATOR ':') AS imagenes
+            FROM libros l
+            INNER JOIN imagenes_prod i ON l.id_libro = i.id_libro
+            INNER JOIN libro_categoria lc ON l.id_libro = lc.id_libro
+            INNER JOIN categorias c ON lc.id_categoria = c.id_categoria
+            INNER JOIN libro_tipo lt ON l.id_libro = lt.id_libro
+            INNER JOIN tipos t ON lt.id_tipo = t.id_tipo
+            INNER JOIN libro_editorial le ON l.id_libro = le.id_libro
+            INNER JOIN editorial e ON le.id_editorial = e.id_editorial
+            INNER JOIN tipo_venta v ON l.id_tipo_venta = v.id_tipo_venta
+            INNER JOIN estado es ON l.id_estado = es.id_estado
+            WHERE 1=1";
 
-        $sql = "SELECT c.*, b.*, t.*, ct.* FROM cars c INNER JOIN brand b INNER JOIN type t INNER JOIN category ct ON c.brand = b.cod_brand "
-            . "AND c.category = ct.cod_category AND c.type = t.cod_type $sql_filter ORDER BY $orderby visits DESC LIMIT $total_prod, $items_page";
+        if (!empty($filter)) {
+            foreach ($filter as $key => $value) {
+                if ($value !== "*") {
+                    switch ($key) {
+                        case "categoria":
+                            if (is_array($value)) {
+                                $categories = implode(",", array_map('intval', $value));
+                                $sql .= " AND c.id_categoria IN ($categories)";
+                            } else {
+                                $sql .= " AND c.id_categoria = '" . mysqli_real_escape_string($db->link, $value) . "'";
+                            }
+                            break;
+                        case "tipo":
+                            $sql .= " AND t.id_tipo = '" . mysqli_real_escape_string($db->link, $value) . "'";
+                            break;
+                        case "tipo_venta":
+                            $sql .= " AND v.id_tipo_venta = '" . mysqli_real_escape_string($db->link, $value) . "'";
+                            break;
+                        case "editorial":
+                            $sql .= " AND e.id_editorial = '" . mysqli_real_escape_string($db->link, $value) . "'";
+                            break;
+                        case "estado":
+                            $sql .= " AND es.id_estado = '" . mysqli_real_escape_string($db->link, $value) . "'";
+                            break;
+                        case "localizacion":
+                            $sql .= " AND l.id_localizacion = '" . mysqli_real_escape_string($db->link, $value) . "'";
+                            break;
+                        case "precio":
+                            $sql .= " AND l.precio BETWEEN " . mysqli_real_escape_string($db->link, $value[0]) . " AND " . mysqli_real_escape_string($db->link, $value[1]);
+                            break;
+                        case "title":
+                            $sql .= " AND l.titulo LIKE '" . mysqli_real_escape_string($db->link, $filter['title']) . "%'";
+                            break;
+                    }
+                }
+            }
+        }
+
+        $sql .= " GROUP BY l.id_libro";
+
+        if (!empty($filter['ordenar'])) {
+            $order_parts = explode(":", $filter['ordenar']);
+            if (count($order_parts) === 2) {
+                $column = mysqli_real_escape_string($db->link, $order_parts[0]);
+                $direction = strtoupper(mysqli_real_escape_string($db->link, $order_parts[1]));
+                if (in_array($direction, ['ASC', 'DESC'])) {
+                    $sql .= " ORDER BY $column $direction";
+                }
+            }
+        }
+
+        $sql .= " LIMIT $limit OFFSET $offset";
 
         $stmt = $db->ejecutar($sql);
-        return $db->listar($stmt);
+        $retrArray = $db->listar($stmt);
+
+        if (!empty($retrArray)) {
+            foreach ($retrArray as &$row) {
+                $row["imagenes"] = explode(":", $row["imagenes"]);
+            }
+        }
+
+        return $retrArray;
     }
 
     public function maps_details($db, $id)
@@ -217,16 +296,63 @@ class shop_dao
         return $db->listar($stmt);
     }
 
-    public function select_count_filters($db, $query)
+    public function select_count_filters($db, $filter)
     {
+        $sql = "SELECT COUNT(DISTINCT l.id_libro) AS total
+            FROM libros l
+            INNER JOIN imagenes_prod i ON l.id_libro = i.id_libro
+            INNER JOIN libro_categoria lc ON l.id_libro = lc.id_libro
+            INNER JOIN categorias c ON lc.id_categoria = c.id_categoria
+            INNER JOIN libro_tipo lt ON l.id_libro = lt.id_libro
+            INNER JOIN tipos t ON lt.id_tipo = t.id_tipo
+            INNER JOIN libro_editorial le ON l.id_libro = le.id_libro
+            INNER JOIN editorial e ON le.id_editorial = e.id_editorial
+            INNER JOIN tipo_venta v ON l.id_tipo_venta = v.id_tipo_venta
+            INNER JOIN estado es ON l.id_estado = es.id_estado
+            WHERE 1=1";
 
-        $filters = self::sql_filter($query);
-
-        $sql = "SELECT COUNT(*) AS num_cars FROM cars c INNER JOIN brand b INNER JOIN type t INNER JOIN category ct ON c.brand = b.cod_brand "
-            . "AND c.category = ct.cod_category AND c.type = t.cod_type $filters";
+        if (!empty($filter)) {
+            foreach ($filter as $key => $value) {
+                if ($value !== "*") {
+                    switch ($key) {
+                        case "categoria":
+                            if (is_array($value)) {
+                                $categories = implode(",", array_map('intval', $value));
+                                $sql .= " AND c.id_categoria IN ($categories)";
+                            } else {
+                                $sql .= " AND c.id_categoria = '" . mysqli_real_escape_string($db->link, $value) . "'";
+                            }
+                            break;
+                        case "tipo":
+                            $sql .= " AND t.id_tipo = '" . mysqli_real_escape_string($db->link, $value) . "'";
+                            break;
+                        case "tipo_venta":
+                            $sql .= " AND v.id_tipo_venta = '" . mysqli_real_escape_string($db->link, $value) . "'";
+                            break;
+                        case "editorial":
+                            $sql .= " AND e.id_editorial = '" . mysqli_real_escape_string($db->link, $value) . "'";
+                            break;
+                        case "estado":
+                            $sql .= " AND es.id_estado = '" . mysqli_real_escape_string($db->link, $value) . "'";
+                            break;
+                        case "localizacion":
+                            $sql .= " AND l.id_localizacion = '" . mysqli_real_escape_string($db->link, $value) . "'";
+                            break;
+                        case "precio":
+                            $sql .= " AND l.precio BETWEEN " . mysqli_real_escape_string($db->link, $value[0]) . " AND " . mysqli_real_escape_string($db->link, $value[1]);
+                            break;
+                        case "title":
+                            $sql .= " AND l.titulo LIKE '" . mysqli_real_escape_string($db->link, $filter['title']) . "%'";
+                            break;
+                    }
+                }
+            }
+        }
 
         $stmt = $db->ejecutar($sql);
-        return $db->listar($stmt);
+        $result = mysqli_fetch_assoc($stmt);
+
+        return $result['total'] ?? 0;
     }
 
     public function select_cars($db, $category, $type, $id, $loaded, $items)

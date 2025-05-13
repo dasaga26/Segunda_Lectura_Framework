@@ -5,7 +5,7 @@ class db
     private $user;
     private $password;
     private $database;
-    private $link;
+    public $link;
     private $stmt;
     private $array;
     static $_instance;

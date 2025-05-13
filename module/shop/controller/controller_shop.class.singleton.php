@@ -14,9 +14,22 @@ class controller_shop
         echo json_encode(common::load_model('shop_model', 'get_list', $_POST['offset']));
     }
 
+    function filter()
+    {
+        // echo json_encode("hola");
+        // exit;
+        echo json_encode(common::load_model('shop_model', 'get_filtrados', [$_POST, $_POST['offset']]));
+    }
+
     function details_carousel()
     {
         echo json_encode(common::load_model('shop_model', 'get_details_carousel', $_GET['id']));
+    }
+
+    
+    function details()
+    {
+        echo json_encode(common::load_model('shop_model', 'get_details', $_GET['id']));
     }
 
     function get_filters()
@@ -43,7 +56,7 @@ class controller_shop
 
     function count_filters()
     {
-        echo json_encode(common::load_model('shop_model', 'get_count_filters', $_POST['filters']));
+        echo json_encode(common::load_model('shop_model', 'get_count_filters', $_POST));
     }
 
     function cars()
