@@ -31,9 +31,14 @@ class shop_bll
 		return $this->dao->select_details_images($this->db, $args);
 	}
 
-	public function get_details_BLL($args)
-	{
-		return $this->dao->select_details($this->db, $args);
+	public function get_more_related_BLL($args){
+		return $this->dao->select_more_related($this->db, $args[0], $args[1], $args[2]);
+
+	}
+
+	public function get_count_more_related_BLL($args){
+		return $this->dao->count_more_related($this->db, $args[0]);
+
 	}
 
 

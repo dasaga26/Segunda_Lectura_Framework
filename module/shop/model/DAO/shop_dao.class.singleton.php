@@ -59,6 +59,20 @@ class shop_dao
 		WHERE l.id_libro = '$id'
 		GROUP BY l.id_libro";
 
+        // echo json_encode($sql);
+        // exit;
+
+        $stmt = $db->ejecutar($sql);
+        return $db->listar($stmt);
+    }
+
+    public function select_extras_book($db, $id)
+    {
+        $sql = "SELECT e.id_extra, e.extra, e.icono
+            FROM libro_extra le  
+            INNER JOIN extras e ON le.id_extra = e.id_extra  
+            WHERE le.id_libro = '$id'";
+
         $stmt = $db->ejecutar($sql);
         return $db->listar($stmt);
     }
@@ -67,7 +81,13 @@ class shop_dao
     {
 
         $details = self::select_details($db, $id);
-        $sql = "SELECT image_name FROM car_images WHERE id_car = '$id'";
+        $extras = self::select_extras_book($db, $id);
+
+        // echo json_encode($details);
+        // exit;
+        $sql = "SELECT i.id_libro, i.url  
+		FROM imagenes_prod i  
+		WHERE i.id_libro = '$id'";
 
         $stmt = $db->ejecutar($sql);
 
@@ -80,8 +100,9 @@ class shop_dao
         }
 
         $rdo = array();
-        $rdo[0] = $details;
+        $rdo = $details;
         $rdo[1][] = $array;
+        $rdo[2][] = $extras;
 
         return $rdo;
         // return $db->listar($array);
@@ -184,6 +205,42 @@ class shop_dao
             $select = $select . $continue;
         }
         return $select;
+    }
+
+    public function select_more_related($db, $type_book, $offset, $limit)
+    {
+        $sql = "SELECT l.id_libro, l.titulo, l.descripcion, l.precio, 
+                GROUP_CONCAT(DISTINCT i.url ORDER BY i.url SEPARATOR ':') AS imagenes
+                FROM libros l
+                INNER JOIN libro_tipo lt ON l.id_libro = lt.id_libro
+                INNER JOIN imagenes_prod i ON l.id_libro = i.id_libro
+                WHERE lt.id_tipo = '" . mysqli_real_escape_string($db->link, $type_book) . "'	
+                GROUP BY l.id_libro
+                LIMIT " . intval($limit) . " OFFSET " . intval($offset);
+
+        $stmt = $db->ejecutar($sql);
+        $retrArray = $db->listar($stmt);
+
+        if (!empty($retrArray)) {
+            foreach ($retrArray as &$row) {
+                $row["imagenes"] = explode(":", $row["imagenes"]);
+            }
+        }
+
+        return $retrArray;
+    }
+
+    public function count_more_related($db, $type_book)
+    {
+        $sql = "SELECT COUNT(*) AS n_books
+                FROM libros l
+                INNER JOIN libro_tipo lt ON l.id_libro = lt.id_libro
+                WHERE lt.id_tipo = '" . mysqli_real_escape_string($db->link, $type_book) . "'";
+
+        $stmt = $db->ejecutar($sql);
+        $result = mysqli_fetch_assoc($stmt);
+
+        return $result;
     }
 
     public function filters($db, $filter, $offset)
@@ -289,11 +346,14 @@ class shop_dao
 
     public function select_count($db)
     {
-
-        $sql = "SELECT COUNT(*) AS num_cars FROM cars";
+        $sql = "SELECT COUNT(DISTINCT l.id_libro) AS total_books
+                FROM libros l
+                INNER JOIN imagenes_prod i ON l.id_libro = i.id_libro";
 
         $stmt = $db->ejecutar($sql);
-        return $db->listar($stmt);
+        $result = mysqli_fetch_assoc($stmt);
+
+        return $result['total_books'] ?? 0;
     }
 
     public function select_count_filters($db, $filter)

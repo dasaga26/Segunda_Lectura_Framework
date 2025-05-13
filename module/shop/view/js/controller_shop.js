@@ -64,9 +64,8 @@ function ajaxForSearch(url, offset = 0, filters) {
                 load_likes_user()
 
             }
-            alert("img");
 
-            // show_map(data);
+            show_map(data);
 
         })
         .catch(function () {
@@ -86,7 +85,7 @@ function loadBooks() {
         pagination(filters);
     } else {
         ajaxForSearch("?module=shop&op=list", 0);
-        //pagination({}); // Pasar un objeto vacío para el caso sin filtros
+        pagination({}); // Pasar un objeto vacío para el caso sin filtros
         print_filters2();
     }
 
@@ -101,8 +100,7 @@ function loadDetails(id_book) {
         "JSON"
     )
         .then(function (data) {
-            console.log(data);
-
+            console.log("Detalles del libro:", data);
             $("#productos-details").empty();
             let detailsHtml = `
         <div class="col-lg-4">
@@ -185,7 +183,7 @@ function loadDetails(id_book) {
                 console.log(data[2][0][row].icono, data[2][0][row].extra);
             }
             load_likes_user()
-            more_cars_related(data[0].id_tipo);
+            more_books_related(data[0].id_tipo); /////////////////
             // Initialize Slick Carousel for the image container
             $(".img_container").slick({
                 infinite: true,
@@ -648,12 +646,11 @@ function pagination(filter) {
         url = "?module=shop&op=count_filters";
         filter = filtros;
     } else {
-        url = "module/shop/ctrl/ctrl_shop.php?op=count";
+        url = "?module=shop&op=count";
     }
 
     ajaxPromise(url, "POST", "json", filter)
         .then(function (data) {
-
             var total_prod = data;
             var total_pages = total_prod >= 4 ? Math.ceil(total_prod / 4) : 1;
 
@@ -689,10 +686,10 @@ function pagination(filter) {
                     // Determinar la URL correcta para la búsqueda
                     let searchUrl;
                     if (filtros) {
-                        searchUrl = "module/shop/ctrl/ctrl_shop.php?op=filter";
+                        searchUrl = "?module=shop&op=filter";
                         filter = filtros;
                     } else {
-                        searchUrl = "module/shop/ctrl/ctrl_shop.php?op=all_books";
+                        searchUrl = "?module=shop&op=list";
                         filter = null;
                     }
 
@@ -708,7 +705,7 @@ function pagination(filter) {
 
 function books_related(loadeds = 0, type_book, total_items = 4) {
     let items = 3;
-    ajaxPromise(`module/shop/ctrl/ctrl_shop.php?op=books_related&type=${type_book}&loadeds=${loadeds}&total_items=${items}`, "GET", "JSON")
+    ajaxPromise(`?module=shop&op=more_related&type=${type_book}&loadeds=${loadeds}&total_items=${items}`, "GET", "JSON")
         .then(function (data) {
             data.forEach((book) => {
                 console.log("Book:", book);
@@ -785,9 +782,9 @@ function books_related(loadeds = 0, type_book, total_items = 4) {
         });
 }
 
-function more_cars_related(type_book) {
+function more_books_related(type_book) {
     var items = 0;
-    ajaxPromise('module/shop/ctrl/ctrl_shop.php?op=count_books_related&type_book=' + type_book, 'POST', 'JSON',)
+    ajaxPromise('?module=shop&op=count_more_related&type_book=' + type_book, 'POST', 'JSON',)
         .then(function (data) {
             var total_items = data;
             books_related(0, type_book, total_items);
@@ -804,7 +801,7 @@ function more_cars_related(type_book) {
 function click_like(id_libro, lugar) {
     var token = localStorage.getItem('token');
     if (token) {
-        ajaxPromise("module/shop/ctrl/ctrl_shop.php?op=control_likes", 'POST', 'JSON', `id_libro=${id_libro}&token=${token}`)
+        ajaxPromise("?module=shop&op=control_likes", 'POST', 'JSON', `id_libro=${id_libro}&token=${token}`)
             .then(function (data) {
                 console.log("ESERE: " + data);
                 if (lugar === "details") {
@@ -837,7 +834,7 @@ function click_like(id_libro, lugar) {
 function load_likes_user() {
     var token = localStorage.getItem('token');
     if (token) {
-        ajaxPromise("module/shop/ctrl/ctrl_shop.php?op=load_likes_user", 'POST', 'JSON', `token=${token}`)
+        ajaxPromise("?module=shop&op=load_likes", 'POST', 'JSON', `token=${token}`)
             .then(function (data) {
                 for (row in data) {
                     $("#" + data[row].id_libro + ".fa-heart").toggleClass('like_red');
@@ -860,7 +857,7 @@ function redirect_login_like() {
         localStorage.removeItem('page');
     } else if (redirect[1] == "list_all") {
         localStorage.removeItem('redirect_like');
-        loadCars();
+        loadBooks();
     }
 }
 

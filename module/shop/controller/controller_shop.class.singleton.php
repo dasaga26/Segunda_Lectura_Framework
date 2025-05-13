@@ -26,7 +26,12 @@ class controller_shop
         echo json_encode(common::load_model('shop_model', 'get_details_carousel', $_GET['id']));
     }
 
-    
+    function count_more_related()
+    {
+        echo json_encode(common::load_model('shop_model', 'get_count_more_related', $_GET['type_book']));
+    }
+
+
     function details()
     {
         echo json_encode(common::load_model('shop_model', 'get_details', $_GET['id']));
@@ -37,6 +42,13 @@ class controller_shop
         // echo json_encode("ctrl");
         // exit;
         echo json_encode(common::load_model('shop_model', 'get_filters'));
+    }
+
+    function more_related()
+    {
+        // echo json_encode("ctrl");
+        // exit;
+        echo json_encode(common::load_model('shop_model', 'get_more_related', [$_GET['type'], $_GET['loadeds'], $_GET['total_items']]));
     }
 
     function filters_search()
@@ -73,6 +85,6 @@ class controller_shop
 
     function control_likes()
     {
-        echo json_encode(common::load_model('shop_model', 'get_control_likes', [$_POST['id'], $_POST['token']]));
+        echo json_encode(common::load_model('shop_model', 'get_control_likes', [$_POST['id_libro'], $_POST['token']]));
     }
 }

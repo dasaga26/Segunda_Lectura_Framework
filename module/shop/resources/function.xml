@@ -28,7 +28,7 @@
         <name>details_carousel</name>
         <uri>details_carousel</uri>
     </function>
-        <function>
+    <function>
         <name>most_visit</name>
         <uri>most_visit</uri>
     </function>
@@ -55,5 +55,17 @@
     <function>
         <name>get_filters</name>
         <uri>get_filters</uri>
+    </function>
+    <function>
+        <name>details</name>
+        <uri>details</uri>
+    </function>
+    <function>
+        <name>more_related</name>
+        <uri>more_related</uri>
+    </function>
+    <function>
+        <name>count_more_related</name>
+        <uri>count_more_related</uri>
     </function>
 </functions>
