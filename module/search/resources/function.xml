@@ -1,15 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <functions>
     <function>
-        <name>car_type</name>
-        <uri>car_type</uri>
+        <name>select_only_location</name>
+        <uri>select_only_location</uri>
     </function>
     <function>
-        <name>car_brand</name>
-        <uri>car_brand</uri>
+        <name>select_location_state</name>
+        <uri>select_location_state</uri>
     </function>
     <function>
         <name>autocomplete</name>
         <uri>autocomplete</uri>
+    </function>
+    <function>
+        <name>search_location</name>
+        <uri>search_location</uri>
+    </function>
+    <function>
+        <name>get_locations</name>
+        <uri>get_locations</uri>
+    </function>
+    <function>
+        <name>search_state_null</name>
+        <uri>search_state_null</uri>
+    </function>
+    <function>
+        <name>search_state</name>
+        <uri>search_state</uri>
+    </function>
+    <function>
+        <name>select_only_state</name>
+        <uri>select_only_state</uri>
+    </function>
+    <function>
+        <name>select_title</name>
+        <uri>select_title</uri>
+    </function>
+    <function>
+        <name>search_location</name>
+        <uri>search_location</uri>
     </function>
 </functions>

@@ -1,5 +1,5 @@
 function load_locations() {
-    ajaxPromise('module/search/ctrl/crtl_search.php?op=search_location', 'POST', 'JSON')
+    ajaxPromise('?module=search&op=search_location', 'POST', 'JSON')
         .then(function (data) {
             $('<option>Location</option>').attr('selected', true).attr('disabled', true).appendTo('select[name="location"]');
             for (let row in data) {
@@ -14,7 +14,7 @@ function load_states(location) {
     $('select[name="state"]').empty();
 
     if (location == undefined) {
-        ajaxPromise('module/search/ctrl/crtl_search.php?op=search_state_null', 'POST', 'JSON')
+        ajaxPromise('?module=search&op=search_state_null', 'POST', 'JSON')
             .then(function (data) {
                 $('<option>State</option>').attr('selected', true).attr('disabled', true).appendTo('select[name="state"]');
                 for (let row in data) {
@@ -24,7 +24,7 @@ function load_states(location) {
                 alert('Error al cargar los estados');
             });
     } else {
-        ajaxPromise('module/search/ctrl/crtl_search.php?op=search_state', 'POST', 'JSON', { location: location })
+        ajaxPromise('?module=search&op=search_state', 'POST', 'JSON', { location: location })
             .then(function (data) {
                 for (let row in data) {
                     $('<option value="' + data[row].id_estado + '">' + data[row].estado + '</option>').appendTo('select[name="state"]');
@@ -66,7 +66,7 @@ function autocomplete() {
             sdata.state = $('select[name="state"]').val();
         }
 
-        ajaxPromise('module/search/ctrl/crtl_search.php?op=autocomplete', 'POST', 'JSON', sdata)
+        ajaxPromise('?module=search&op=autocomplete', 'POST', 'JSON', sdata)
             .then(function (data) {
                 $('#searchAuto').empty().hide();
                 if (data.length === 0) {
@@ -127,7 +127,7 @@ function button_search() {
         localStorage.setItem('filter', $.param(search));
         
         // Redirigir a la página de shop
-        window.location.href = 'index.php?page=shop&op=list';
+        window.location.href = '?module=shop';
     });
 }
 
@@ -135,4 +135,5 @@ $(document).ready(function () {
     launch_search();
     autocomplete();
     button_search();
+    // alert("hola");
 });

@@ -12,34 +12,34 @@
                 self::$_instance = new self();
             }
             return self::$_instance;
+        }   
+
+        public function search_state_null() {
+            return $this -> bll -> search_state_null_BLL();
         }
 
-        public function get_car_type() {
-            return $this -> bll -> get_car_type_BLL();
+        public function get_locations() {
+            return $this -> bll -> get_locations_BLL();
         }
 
-        public function get_car_brand() {
-            return $this -> bll -> get_car_brand_BLL();
+        public function search_state($args) {
+            return $this -> bll -> search_state_BLL($args);
         }
 
-        public function get_car_type_brand($args) {
-            return $this -> bll -> get_car_type_brand_BLL($args);
+        public function select_only_location($args) {
+            return $this->bll->select_only_location_BLL($args);
         }
 
-        public function get_auto_car_type($args) {
-            return $this -> bll -> get_auto_car_type_BLL($args);
+        public function select_location_state($args) {
+            return $this->bll->select_location_state_BLL($args);
         }
 
-        public function get_auto_car_brand($args) {
-            return $this -> bll -> get_auto_car_brand_BLL($args);
+        public function select_only_state($args) {
+            return $this->bll->select_only_state_BLL($args);
         }
 
-        public function get_auto_car_type_brand($args) {
-            return $this -> bll -> get_auto_car_type_brand_BLL($args);
-        }
-
-        public function get_auto($args) {
-            return $this -> bll -> get_auto_BLL($args);
+        public function select_title($args) {
+            return $this->bll->select_title_BLL($args);
         }
 
     }
