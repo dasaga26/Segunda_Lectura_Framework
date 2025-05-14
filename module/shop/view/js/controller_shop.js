@@ -396,10 +396,13 @@ function filter_button() {
     });
     if (localStorage.getItem("filter_precio")) {
         let savedPrice = JSON.parse(localStorage.getItem("filter_precio"));
-        $(".js-range-slider").data("ionRangeSlider").update({
-            from: savedPrice[0],
-            to: savedPrice[1],
-        });
+        let sliderInstance = $(".js-range-slider").data("ionRangeSlider");
+        if (sliderInstance) {
+            sliderInstance.update({
+                from: savedPrice[0],
+                to: savedPrice[1],
+            });
+        }
     }
 
     // Filtro de orden
@@ -545,6 +548,7 @@ function clicks() {
     });
 
     $(document).on("click", ".filter_remove", function () {
+        alert("Filters removed");
         remove_filters();
     });
 
