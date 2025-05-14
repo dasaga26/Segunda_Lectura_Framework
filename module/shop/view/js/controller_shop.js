@@ -660,7 +660,6 @@ function pagination(filter) {
 
             function renderPagination() {
                 paginationContainer.empty();
-
                 if (currentPage > 1) {
                     paginationContainer.append(
                         `<button class="page-btn prev-btn" data-page="${currentPage - 1}">&larr; Anterior</button>`
@@ -698,7 +697,6 @@ function pagination(filter) {
                     renderPagination();
                 });
             }
-
             renderPagination();
         });
 }
@@ -786,6 +784,7 @@ function more_books_related(type_book) {
     var items = 0;
     ajaxPromise('?module=shop&op=count_more_related&type_book=' + type_book, 'POST', 'JSON',)
         .then(function (data) {
+            console.log("Total items:", data);
             var total_items = data;
             books_related(0, type_book, total_items);
             $(document).on("click", '.load_more_button', function () {

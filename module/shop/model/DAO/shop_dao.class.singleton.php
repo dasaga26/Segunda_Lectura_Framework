@@ -240,7 +240,7 @@ class shop_dao
         $stmt = $db->ejecutar($sql);
         $result = mysqli_fetch_assoc($stmt);
 
-        return $result;
+        return $result['n_books'] ?? 0;
     }
 
     public function filters($db, $filter, $offset)
