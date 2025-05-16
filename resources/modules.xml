@@ -33,4 +33,8 @@
         <uri>login</uri>
         <uri>register</uri>
     </module>
+    <module>
+        <name>auth</name>
+        <uri>auth</uri>
+    </module>
 </modules>

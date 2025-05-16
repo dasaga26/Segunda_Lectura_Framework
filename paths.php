@@ -78,14 +78,13 @@
     // define('MODEL_CART', SITE_ROOT . 'module/cart/model/model/');
     // define('JS_VIEW_CART', SITE_PATH . 'module/cart/view/js/');
     // define ('VIEW_PATH_CART', SITE_ROOT . 'module/cart/view/');
-    
-    //MODEL_LOGIN
-    define('UTILS_LOGIN', SITE_ROOT . 'module/login/utils/');
-    define('DAO_LOGIN', SITE_ROOT . 'module/login/model/DAO/');
-    define('BLL_LOGIN', SITE_ROOT . 'module/login/model/BLL/');
-    define('MODEL_LOGIN', SITE_ROOT . 'module/login/model/model/');
-    define('JS_VIEW_LOGIN', SITE_PATH . 'module/login/view/js/');
-    define ('VIEW_PATH_LOGIN', SITE_ROOT . 'module/login/view/');
+    //MODEL_AUTH
+    define('UTILS_AUTH', SITE_ROOT . 'module/auth/utils/');
+    define('DAO_AUTH', SITE_ROOT . 'module/auth/model/DAO/');
+    define('BLL_AUTH', SITE_ROOT . 'module/auth/model/BLL/');
+    define('MODEL_AUTH', SITE_ROOT . 'module/auth/model/model/');
+    define('JS_VIEW_AUTH', SITE_PATH . 'module/auth/view/js/');
+    define('VIEW_PATH_AUTH', SITE_ROOT . 'module/auth/view/');
 
     // Friendly
     define('URL_FRIENDLY', TRUE);

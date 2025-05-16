@@ -10,7 +10,7 @@ if(isset($_GET['module'])){
 		case "shop";
 			include("module/".$_GET['module']."/controller/controller_".$_GET['module'].".php");
 			break;
-		case "login";
+		case "auth";
 			include("module/".$_GET['module']."/controller/controller_".$_GET['module'].".php");
 			break;
 		case "errors";

@@ -67,23 +67,112 @@ function friendlyURL(url) {
     return "http://localhost/Segunda_Lectura/Segunda_Lectura_Framework" + link;
 }
 
-//DROPDOWN MENU//
-const profileIcon = document.getElementById('pfp');
-const dropdownMenu = document.querySelector('.dropdown-menu');
 
-profileIcon.addEventListener('click', () => {
-    dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
-});
 
-document.addEventListener('click', (event) => {
-    if (!profileIcon.contains(event.target) && !dropdownMenu.contains(event.target)) {
-        dropdownMenu.style.display = 'none';
-    }
-});
-////////////////
+function renderHeader() {
+    const headerHTML = `
+    <div class="hearer_icon d-flex">
+        <div class="search-container" style="position: relative;"></div>
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-12">
+                    <nav class="navbar navbar-expand-lg navbar-light">
+                        <a class="navbar-brand" href="${friendlyURL('?module=home')}"> 
+                            <img src="view/images/logo.png" alt="logo" width="170px"> 
+                        </a>
+                        <button class="navbar-toggler" type="button" data-toggle="collapse"
+                            data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                            aria-expanded="false" aria-label="Toggle navigation">
+                            <span class="menu_icon"><i class="fas fa-bars"></i></span>
+                        </button>
+                        <div class="collapse navbar-collapse main-menu-item" id="navbarSupportedContent">
+                            <ul class="navbar-nav">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="${friendlyURL('?module=shop')}">Shop</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="hearer_icon d-flex">
+                            <div class="search-container" style="position: relative;">
+                                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" name="query" id="autocom" autocomplete="off" style="width: 200px;">
+                                <div id="searchAuto" class="autocomplete-items"></div>
+                            </div>
+                            <select class="form-control mr-sm-2" name="location" style="width: 150px;"></select>
+                            <select class="form-control mr-sm-2" name="state" style="width: 150px;"></select>
+                            <button class="btn btn-outline-success my-2 my-sm-0" type="submit" id="search-btn">Search</button>
+                            <div class="profile-container" style="position: relative; margin-left: 20px;">
+                                <img src="view/images/default_pfp.webp" id="pfp" alt="Profile Icon" width="40px" height="40px" style="border-radius: 50%; cursor: pointer;">
+                                <div class="dropdown-menu" style="position: absolute; top: 50px; right: 0; display: none; background-color: white; border: 1px solid #ccc; border-radius: 5px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+                                    <a class="dropdown-item" href="${friendlyURL('?module=auth')}" style="padding: 10px; display: block; text-decoration: none; color: black;">Iniciar Sesión</a>
+                                </div>
+                            </div>
+                        </div>
+                    </nav>
+                    <style>
+                        .nice-select {
+                            display: none !important;
+                        }
+                        .autocomplete-items {
+                            position: absolute;
+                            border: 1px solid #d4d4d4;
+                            border-bottom: none;
+                            border-top: none;
+                            z-index: 99;
+                            top: 73%;
+                            left: 50.9%;
+                            right: 400px;
+                        }
+                        .autocomplete-items div {
+                            padding: 10px;
+                            cursor: pointer;
+                            background-color: #fff;
+                            border-bottom: 1px solid #d4d4d4;
+                        }
+                        .autocomplete-items div:hover {
+                            background-color: #e9e9e9;
+                        }
+                        .autocomplete-active {
+                            background-color: DodgerBlue !important;
+                            color: #ffffff;
+                        }
+                        .search-container {
+                            display: flex;
+                            flex-direction: column;
+                        }
+                    </style>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+    // Inserta el header en el div con id="header"
+    document.getElementById('header').innerHTML = headerHTML;
+}
+
+
+function dropdown() {
+    // DROPDOWN MENU //
+    $(function () {
+        const $profileIcon = $('#pfp');
+        const $dropdownMenu = $('.dropdown-menu');
+
+        $profileIcon.on('click', function (e) {
+            e.stopPropagation();
+            $dropdownMenu.toggle();
+        });
+
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('.profile-container').length) {
+                $dropdownMenu.hide();
+            }
+        });
+    });
+}
 
 $(document).ready(function () {
+    // alert("Welcome to the app");
+    renderHeader();
+    dropdown();
     // load_menu();
     // click_logout();
-
 });

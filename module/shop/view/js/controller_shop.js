@@ -5,7 +5,10 @@ function ajaxForSearch(url, offset = 0, filters) {
             $("#list-content").empty();
             if (data === "error" || data.length === 0) {
                 $("#list-content").html(
-                    "<h3>¡No se encuentran resultados con los filtros aplicados!</h3>"
+                    "<div class='col-lg-12'>" +
+                    "<img src='view/images/notfound.avif' alt='No books found' width='250px'/>" +
+                    "<h3>¡No se encuentran resultados con los filtros aplicados!</h3>" +
+                    "</div>"
                 );
             } else {
 
@@ -548,7 +551,6 @@ function clicks() {
     });
 
     $(document).on("click", ".filter_remove", function () {
-        alert("Filters removed");
         remove_filters();
     });
 
@@ -813,7 +815,7 @@ function click_like(id_libro, lugar) {
                     $(".list__heart#" + id_libro + " .fa-heart").toggleClass('like_red');
                 }
             }).catch(function () {
-                alert("error like");
+                console.error("error like");
                 //window.location.href = "index.php?module=ctrl_exceptions&op=503&type=503&lugar=Function click_like SHOP";
             });
 

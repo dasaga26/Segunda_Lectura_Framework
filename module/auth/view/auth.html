@@ -1,0 +1,92 @@
+<head>
+    <style>
+        .spinner-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<div class="auth-container login-section">
+    <div class="form">
+        <h2>Iniciar Sesion</h2>
+        <form id="login_form" method="POST">
+            <div>
+                <input type="text" id="username" name="username" placeholder="Enter Username Here" required>
+                <div id="error-username" class="error"></div>
+            </div>
+            <div>
+                <input type="password" id="password" name="password" placeholder="Enter Password Here" required>
+                <div id="error-password"  class="error"></div>
+            </div>
+            <div>
+                <button type="submit" id="login" class="btnn">Login</button>
+            </div>
+            <p class="link">¿Aun no tienes cuenta?<br>
+                <a href="#" class="go_register">Registrate </a> aqui</a>
+            </p>
+        </form>
+    </div>
+</div>
+
+<!-- Register Page -->
+<div class="auth-container register-section">
+    <div class="form">
+        <h2>Registrarse</h2>
+        <form id="register_form" method="POST">
+            <div>
+                <input type="email" id="reg-email" name="email" placeholder="Enter Email Here" required>
+                <div id="error-reg-email"  class="error"></div>
+            </div>
+            <div>
+                <input type="text" id="reg-username" name="username" placeholder="Enter Username Here" required>
+                <div id="error-reg-username"  class="error"></div>
+            </div>
+            <div>
+                <input type="password" id="reg-password" name="password" placeholder="Enter Password Here" required>
+                <div id="error-reg-password"  class="error"></div>
+            </div>
+            <div>
+                <input type="password" id="conf-password" name="conf_password" placeholder="Confirm Password Here" required>
+                <div id="error-conf-password"  class="error"></div>
+            </div>
+            <div>
+                <button type="submit" id="register">Register</button>
+            </div>
+            <p class="link">¿Ya tienes una cuenta?<br>
+                <a href="#" class="go_login">Inicia Sesion </a> aqui</a>
+            </p>
+        </form>
+    </div>
+</div>
+
+<div id="spinner" class="spinner-container">
+    <div class="spinner"></div>
+</div>
